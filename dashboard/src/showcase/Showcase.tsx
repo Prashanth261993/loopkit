@@ -2,6 +2,8 @@ import { ReplayEmbed } from "./ReplayEmbed";
 import { EvalChart } from "./EvalChart";
 import { Diagrams } from "./Diagrams";
 import { Icon } from "./Icon";
+import { Reveal, ScrollProgress } from "./motion";
+import { LoopDraw } from "./LoopDraw";
 
 const REPO = "https://github.com/Prashanth261993/loopkit";
 
@@ -37,36 +39,45 @@ const CONCEPTS = [
   {
     icon: Icon.stop,
     tag: "control",
+    question: "When should it stop?",
     title: "Composable stop policies",
+    sig: "GoalReached() | MaxIters(6) | Budget(...) | NoProgress()",
     body:
-      "Termination is a first-class, testable object — not a while-loop condition. `GoalReached() | MaxIters(6) | Budget(...) | NoProgress()` OR together, so \"why did it stop?\" is always a named policy, never a mystery.",
+      "Termination is a first-class, testable object — not a buried while-condition. Policies OR together, so \"why did it stop?\" is always a named answer you can point to, never a mystery.",
   },
   {
     icon: Icon.heal,
     tag: "recovery",
-    title: "Self-healing (actor–critic)",
+    question: "What if the answer is wrong?",
+    title: "Actor–critic self-healing",
+    sig: "RuleBasedCritic(reject_final=...) -> Reflexion note",
     body:
-      "A Critic can veto a final answer or a failed tool call. The verdict becomes a Reflexion note injected back into context, counted against a heal budget separate from the governor. The loop learns within the run.",
+      "A critic can veto a final answer or a failed tool call. Its verdict becomes a note injected back into context — counted against a heal budget separate from the governor — so the loop actually learns within a single run.",
   },
   {
     icon: Icon.thrash,
     tag: "safety",
+    question: "What if it loops forever?",
     title: "Anti-thrash detection",
+    sig: "hash(tool, normalize(args)) trips on oscillation",
     body:
-      "A detector hashes (tool, normalized args) and trips on oscillation — the agent repeating itself in a different costume. Distinct from consecutive no-progress: this catches the loop going in circles overall.",
+      "A detector hashes each (tool, normalized args) and trips when the agent repeats itself in a different costume. Distinct from consecutive no-progress: this catches the loop going in circles overall.",
   },
   {
     icon: Icon.eye,
     tag: "observability",
+    question: "How do you know what happened?",
     title: "One versioned event stream",
+    sig: "emit(evt) -> JSONL file  +  live SSE  (drop-oldest)",
     body:
-      "Every turn emits schema-versioned events. They're written once and fanned out drop-oldest to a JSONL file and a live SSE feed — so observability can never back-pressure the loop, and evals measure exactly what the dashboard showed.",
+      "Every turn emits schema-versioned events, written once and fanned out drop-oldest to a JSONL file and a live SSE feed — so observability can never back-pressure the loop, and evals measure exactly what the dashboard showed.",
   },
 ];
 
 export function Showcase() {
   return (
     <div className="showcase">
+      <ScrollProgress />
       <TopBar />
 
       <header className="hero">
@@ -109,7 +120,7 @@ export function Showcase() {
           title="A real run, replayed in your browser"
           note="Zero backend — a static JSONL file, paced by its own recorded timestamps, through the exact same reducer the live console uses."
         >
-          <ReplayEmbed />
+          <Reveal><ReplayEmbed /></Reveal>
           <p className="stage-caption">
             The a11y-auditor emits an <code>&lt;img&gt;</code> with no alt text,
             its critic vetoes the final answer, a Reflexion note is injected, and
@@ -121,22 +132,33 @@ export function Showcase() {
         <Section
           id="concepts"
           eyebrow="the ideas"
-          title="What the loop actually engineers"
-          note="Four loop-engineering concepts, each a small, swappable, tested object in the kernel."
+          title="Four hard questions"
+          note="Writing a loop is trivial. Running one well means answering four questions honestly — and in LoopKit each answer is a small, swappable, tested object in the kernel."
         >
-          <div className="concept-grid">
-            {CONCEPTS.map((c) => {
+          <ol className="story">
+            {CONCEPTS.map((c, i) => {
               const I = c.icon;
               return (
-                <article className="concept" key={c.title}>
-                  <div className="concept-icon"><I /></div>
-                  <span className="concept-tag">{c.tag}</span>
-                  <h3>{c.title}</h3>
-                  <p>{c.body}</p>
-                </article>
+                <Reveal as="li" className="story-step" delay={i * 0.05} key={c.title}>
+                  <div className="story-rail">
+                    <span className="story-num">{String(i + 1).padStart(2, "0")}</span>
+                  </div>
+                  <div className="story-main">
+                    <p className="story-q">
+                      <span className="story-tag">{c.tag}</span>
+                      {c.question}
+                    </p>
+                    <h3 className="story-title">
+                      <span className="story-ic"><I /></span>
+                      {c.title}
+                    </h3>
+                    <p className="story-body">{c.body}</p>
+                    <code className="story-sig">{c.sig}</code>
+                  </div>
+                </Reveal>
               );
             })}
-          </div>
+          </ol>
         </Section>
 
         <Section
@@ -145,7 +167,8 @@ export function Showcase() {
           title="Architecture"
           note="Four layers over one seam. The kernel emits; everything else consumes."
         >
-          <Diagrams />
+          <Reveal><LoopDraw /></Reveal>
+          <Reveal delay={0.05}><Diagrams /></Reveal>
         </Section>
 
         <Section
@@ -154,7 +177,7 @@ export function Showcase() {
           title="Measured, not asserted"
           note="A deterministic harness grades task success with independent checkers — never the loop's own self-report."
         >
-          <EvalChart />
+          <Reveal><EvalChart /></Reveal>
         </Section>
 
         <Section
@@ -163,13 +186,13 @@ export function Showcase() {
           title="How thin is an agent?"
           note="Once the runtime exists, a real agent is just tools + policies — and the thing you enforce is the thing you measure."
         >
-          <div className="snippet-wrap">
+          <Reveal className="snippet-wrap">
             <div className="snippet-head">
               <Icon.code /> <span>a11y_auditor.py</span>
               <span className="snippet-hint">one predicate · used twice · never diverges</span>
             </div>
             <pre className="snippet"><code>{AGENT_SNIPPET}</code></pre>
-          </div>
+          </Reveal>
         </Section>
       </main>
 
@@ -229,11 +252,11 @@ function Section({
 }) {
   return (
     <section className="section" id={id}>
-      <div className="section-head">
+      <Reveal className="section-head">
         <p className="eyebrow small">{eyebrow}</p>
         <h2>{title}</h2>
         <p className="section-note">{note}</p>
-      </div>
+      </Reveal>
       {children}
     </section>
   );

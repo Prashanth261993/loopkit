@@ -39,7 +39,7 @@ const SLOTS: Slot[] = [
 export function Diagrams() {
   const [zoom, setZoom] = useState<{ src: string; alt: string } | null>(null);
   return (
-    <div className="diagram-grid">
+    <div className="diagram-rows">
       {SLOTS.map((s) => (
         <DiagramCard key={s.src} slot={s} onZoom={setZoom} />
       ))}
