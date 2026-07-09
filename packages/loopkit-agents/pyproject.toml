@@ -1,0 +1,27 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "loopkit-agents"
+version = "0.1.0"
+description = "Three thin, real LoopKit agents (a11y-auditor · dep-updater · pr-fixer) — each just tools + policies, each with its own eval that proves the loop helps."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "LoopKit" }]
+keywords = ["agent", "loopkit", "accessibility", "dependencies", "pull-request"]
+dependencies = [
+    "loopkit>=0.1",
+    "loopkit-tools>=0.1",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.5"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/loopkit_agents"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"

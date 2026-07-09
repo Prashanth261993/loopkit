@@ -30,9 +30,9 @@ runtime you can **observe, test, and measure**.
 
 ```
 Layer 4  dashboard/        React/TS — one consumer of the event stream, works for every agent
-Layer 3  loopkit-agents/   pr-fixer · dep-updater · a11y-auditor  (importable, each w/ evals)
-Layer 2  loopkit-tools/    shared tools: subprocess · fs · git · http
-Layer 1  loopkit/          kernel · policies · events · evals · adapters   ← M0–M4.5 ✅ shipped
+Layer 3  loopkit-agents/   pr-fixer · dep-updater · a11y-auditor  (importable, each w/ evals)   ← M5 ✅ shipped
+Layer 2  loopkit-tools/    shared tools: subprocess · fs · git · http                           ← M5 ✅ shipped
+Layer 1  loopkit/          kernel · policies · events · evals · adapters                        ← M0–M4.5 ✅ shipped
 ```
 
 The **seam** between the Python kernel and the TypeScript dashboard is a single
@@ -78,6 +78,48 @@ copy** to build your own agent — it heals once and scores naive 0% vs self-hea
 **→ Full guided walkthrough: [`GETTING_STARTED.md`](GETTING_STARTED.md)** — an
 L0→L4 ladder from *see the loop* to *grade it*, one keyless command per rung.
 
+### See it in the dashboard
+
+```bash
+python examples/m3_observe.py        # writes dashboard/public/sample.jsonl
+cd dashboard && npm install && npm run dev   # → http://localhost:5173
+```
+
+Open the URL and hit **★ Play the sample run**. The dashboard is just another
+reader of the same event stream — JSONL replay (no backend), live SSE, or file
+upload. Details in [`GETTING_STARTED.md`](GETTING_STARTED.md) (L3).
+
+## The agents (proof the abstractions are real)
+
+Three shipped agents live in `packages/loopkit-agents`, each built on the shared
+tools in `packages/loopkit-tools`. Every one is the same shape — `tools +
+policies` — and every one obeys the **Agent Contract**: a single predicate is
+both the critic's `reject_final` (what it *enforces* at runtime) and the eval
+task's `requirement` (what it's *measured* against).
+
+```bash
+pip install -e packages/loopkit-tools -e packages/loopkit-agents
+python examples/m5_agents.py    # demo + grade all three; records a showcase run
+```
+
+| Agent | Heals when… | naive → self-heal |
+|---|---|---|
+| **a11y-auditor** | it ships HTML that still fails the scan | 0% → 100% |
+| **dep-updater** | a floating version leaves the build red | 0% → 100% |
+| **pr-fixer** | it declares victory before tests pass | 0% → 100% |
+
+```python
+from loopkit_agents import a11y_auditor
+from loopkit.agent import demo, grade
+
+demo(a11y_auditor)               # RUN it once (no writes without an allow-list)
+print(grade(a11y_auditor).to_markdown())   # GRADE it: naive vs self-heal
+```
+
+`examples/m5_agents.py` also records the a11y-auditor's self-healing run to
+`dashboard/public/a11y_showcase.jsonl` — a real agent healing itself, replayable
+in the dashboard with zero backend.
+
 ## Status
 
 Built inside-out, milestone by milestone:
@@ -88,7 +130,7 @@ Built inside-out, milestone by milestone:
 - **M3 — Observe** ✅ SSE server + React dashboard (live + JSONL replay), drillable event rows
 - **M4 — Evals** ✅ naive-vs-self-healing, graded on **task success** not loop status (+80pp, measured)
 - **M4.5 — DX / Onboarding** ✅ the Agent Contract (`Agent` = tools + policies), copy-me `your_first_agent.py`, `GETTING_STARTED.md` ladder, dashboard getting-started panel
-- **M5 — Agents ×3** · a11y-auditor → dep-updater → pr-fixer
+- **M5 — Agents ×3** ✅ shared `loopkit-tools` + `loopkit-agents`; a11y-auditor, dep-updater, pr-fixer — each a thin `tools + policies` composition, each 0%→100% naive-vs-heal
 - **M6 — Showcase** · static GitHub Pages replay dashboard
 
 ## License

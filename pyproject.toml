@@ -9,4 +9,8 @@ target-version = "py311"
 extend-exclude = ["dashboard", "lessons"]
 
 [tool.pytest.ini_options]
-testpaths = ["packages/loopkit/tests"]
+testpaths = [
+    "packages/loopkit/tests",
+    "packages/loopkit-tools/tests",
+    "packages/loopkit-agents/tests",
+]

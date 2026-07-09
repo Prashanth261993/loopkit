@@ -1,0 +1,26 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "loopkit-tools"
+version = "0.1.0"
+description = "Shared, safety-aware tools (fs · process · git · http) for LoopKit agents. Zero runtime deps beyond the stdlib."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "LoopKit" }]
+keywords = ["agent", "tools", "loopkit", "subprocess", "git"]
+dependencies = [
+    "loopkit>=0.1",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.5"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/loopkit_tools"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"

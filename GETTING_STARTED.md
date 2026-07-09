@@ -16,6 +16,7 @@ learn the loop before you ever pay a token). Climb in order.
 | **L2** | self-healing, turned on with one flag | `python examples/m2_self_heal.py` |
 | **L3** | the run, live, in a dashboard | `python examples/m3_observe.py` → open the console |
 | **L4** | proof it works — naive vs healing, measured | `python examples/m4_evals.py` |
+| **L5** | three real agents, same shape as yours | `python examples/m5_agents.py` |
 
 ---
 
@@ -32,6 +33,12 @@ pip install -e packages/loopkit
 That's the whole runtime — **zero LLM dependencies**. LLM adapters are optional
 extras (`pip install -e "packages/loopkit[openai]"`, `[anthropic]`, `[ollama]`)
 you only need when you point an agent at a real model.
+
+To run the three shipped agents (L5), also install the two agent-layer packages:
+
+```bash
+pip install -e packages/loopkit-tools -e packages/loopkit-agents
+```
 
 ---
 
@@ -160,6 +167,39 @@ self-reported `status`. That distinction is the punchline:
 
 **Concept:** "the loop said success" is not "the task succeeded." An honest eval
 judges the artifact, not the agent's opinion of itself.
+
+---
+
+## L5 — Read three real agents
+
+```bash
+pip install -e packages/loopkit-tools -e packages/loopkit-agents
+python examples/m5_agents.py
+```
+
+Everything above was scaffolding for this moment: three *real* agents that are
+nothing but `tools + policies`, built to the exact contract you learned in L1.
+
+| Agent | Domain tool | Heals when… |
+|---|---|---|
+| **a11y-auditor** | scans HTML for accessibility defects | it ships a page that still fails the scan |
+| **dep-updater** | builds a dependency manifest | a floating version leaves the build red |
+| **pr-fixer** | runs the test suite | it declares victory before tests pass |
+
+`m5_agents.py` runs `demo()` **and** `grade()` on each — every one heals once at
+runtime and scores **naive 0% → self-heal 100%** when graded. The key discipline:
+in each agent a *single* predicate function is passed to **both** the critic's
+`reject_final` (the RUN face — what it enforces) and the eval task's
+`requirement` (the GRADE face — what it's measured against). What you enforce is
+literally what you measure; they cannot drift.
+
+It also records the a11y-auditor's self-heal run to
+`dashboard/public/a11y_showcase.jsonl` — drop it into the dashboard (L3) to watch
+a real agent heal itself.
+
+**Concept:** a good runtime makes agents *thin*. If adding a new agent means
+writing a domain tool and one requirement predicate — not a new loop — the
+abstraction is real.
 
 ---
 
