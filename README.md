@@ -77,10 +77,10 @@ safety gate held.
 Built inside-out, milestone by milestone:
 
 - **M0 — Scaffold** ✅ kernel, event seam, mock adapter, JSONL sink, safety gate, zero-LLM loop
-- **M1 — Runtime** · composable stop policies, governor, context strategy, real adapters
-- **M2 — Self-heal** · actor–critic, retry/backoff, Reflexion memory, anti-thrash
-- **M3 — Observe** · SSE server + React dashboard (live + JSONL replay)
-- **M4 — Evals** · naive-vs-self-healing, measured
+- **M1 — Runtime** ✅ composable stop policies, governor, context strategy, real adapters
+- **M2 — Self-heal** ✅ actor–critic, retry/backoff, Reflexion memory, anti-thrash
+- **M3 — Observe** ✅ SSE server + React dashboard (live + JSONL replay), drillable event rows
+- **M4 — Evals** ✅ naive-vs-self-healing, graded on **task success** not loop status (+80pp, measured)
 - **M5 — Agents ×3** · a11y-auditor → dep-updater → pr-fixer
 - **M6 — Showcase** · static GitHub Pages replay dashboard
 

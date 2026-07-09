@@ -1,0 +1,134 @@
+{
+  "cases": [
+    {
+      "task_id": "cite-number",
+      "arm": "naive",
+      "passed": false,
+      "status": "success",
+      "iterations": 1,
+      "tokens_in": 32,
+      "tokens_out": 12,
+      "heals": 0,
+      "detail": "cited 42=False answer='the answer is unknown'"
+    },
+    {
+      "task_id": "cite-number",
+      "arm": "self-heal",
+      "passed": true,
+      "status": "success",
+      "iterations": 2,
+      "tokens_in": 64,
+      "tokens_out": 24,
+      "heals": 1,
+      "detail": "cited 42=True answer='the answer is 42'"
+    },
+    {
+      "task_id": "valid-json",
+      "arm": "naive",
+      "passed": false,
+      "status": "success",
+      "iterations": 1,
+      "tokens_in": 32,
+      "tokens_out": 12,
+      "heals": 0,
+      "detail": "valid_json=False answer='here you go: not json'"
+    },
+    {
+      "task_id": "valid-json",
+      "arm": "self-heal",
+      "passed": true,
+      "status": "success",
+      "iterations": 2,
+      "tokens_in": 64,
+      "tokens_out": 24,
+      "heals": 1,
+      "detail": "valid_json=True answer='{\"status\": \"ok\"}'"
+    },
+    {
+      "task_id": "mention-keyword",
+      "arm": "naive",
+      "passed": false,
+      "status": "success",
+      "iterations": 1,
+      "tokens_in": 32,
+      "tokens_out": 12,
+      "heals": 0,
+      "detail": "mentions_keyword=False answer='all done.'"
+    },
+    {
+      "task_id": "mention-keyword",
+      "arm": "self-heal",
+      "passed": true,
+      "status": "success",
+      "iterations": 2,
+      "tokens_in": 64,
+      "tokens_out": 24,
+      "heals": 1,
+      "detail": "mentions_keyword=True answer='shipped it in loopkit.'"
+    },
+    {
+      "task_id": "tool-then-answer",
+      "arm": "naive",
+      "passed": false,
+      "status": "success",
+      "iterations": 2,
+      "tokens_in": 64,
+      "tokens_out": 28,
+      "heals": 0,
+      "detail": "tool_called=True cited_result=False answer='the sum is 12'"
+    },
+    {
+      "task_id": "tool-then-answer",
+      "arm": "self-heal",
+      "passed": true,
+      "status": "success",
+      "iterations": 3,
+      "tokens_in": 96,
+      "tokens_out": 40,
+      "heals": 1,
+      "detail": "tool_called=True cited_result=True answer='the sum is 7'"
+    },
+    {
+      "task_id": "already-correct",
+      "arm": "naive",
+      "passed": true,
+      "status": "success",
+      "iterations": 1,
+      "tokens_in": 32,
+      "tokens_out": 12,
+      "heals": 0,
+      "detail": "cited 42=True answer='the answer is 42'"
+    },
+    {
+      "task_id": "already-correct",
+      "arm": "self-heal",
+      "passed": true,
+      "status": "success",
+      "iterations": 1,
+      "tokens_in": 32,
+      "tokens_out": 12,
+      "heals": 0,
+      "detail": "cited 42=True answer='the answer is 42'"
+    }
+  ],
+  "summaries": {
+    "naive": {
+      "arm": "naive",
+      "n": 5,
+      "passed": 1,
+      "success_rate": 0.2,
+      "mean_iters": 1.2,
+      "mean_tokens": 53.6,
+      "total_heals": 0
+    },
+    "self-heal": {
+      "arm": "self-heal",
+      "n": 5,
+      "passed": 5,
+      "success_rate": 1.0,
+      "mean_iters": 2,
+      "mean_tokens": 88.8,
+      "total_heals": 4
+    }
+  }
+}
