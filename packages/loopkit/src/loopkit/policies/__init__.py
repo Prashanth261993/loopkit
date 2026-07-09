@@ -8,6 +8,18 @@ from loopkit.policies.context import (
     estimate_tokens,
 )
 from loopkit.policies.governor import CostModel, Governor, GovernorDecision
+from loopkit.policies.heal import (
+    Backoff,
+    Critic,
+    Critique,
+    ExponentialBackoff,
+    HealPolicy,
+    HealTrigger,
+    NoBackoff,
+    ReflexionMemory,
+    RuleBasedCritic,
+    ThrashDetector,
+)
 from loopkit.policies.stop import (
     AnyOf,
     MaxIterations,
@@ -37,4 +49,15 @@ __all__ = [
     "Governor",
     "GovernorDecision",
     "CostModel",
+    # heal (M2)
+    "HealTrigger",
+    "Critique",
+    "Critic",
+    "RuleBasedCritic",
+    "HealPolicy",
+    "ReflexionMemory",
+    "Backoff",
+    "NoBackoff",
+    "ExponentialBackoff",
+    "ThrashDetector",
 ]

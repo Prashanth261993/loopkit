@@ -48,6 +48,7 @@ class RunStatus(str, Enum):
     MAX_ITERS = "max_iters"
     BUDGET_EXCEEDED = "budget_exceeded"
     STALLED = "stalled"
+    THRASHING = "thrashing"  # anti-thrash tripped (M2)
     RUNNING = "running"  # transient, never on run.end
 
 

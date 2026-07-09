@@ -14,12 +14,23 @@ event types already exist in the schema so the seam doesn't move.
 
 from __future__ import annotations
 
+import time
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from loopkit.adapters.base import ModelAdapter
 from loopkit.events import EventBus, EventType, RunStatus
 from loopkit.policies.context import ContextStrategy, PassthroughContext
 from loopkit.policies.governor import Governor
+from loopkit.policies.heal import (
+    Backoff,
+    Critic,
+    Critique,
+    HealPolicy,
+    NoBackoff,
+    ReflexionMemory,
+    ThrashDetector,
+)
 from loopkit.policies.stop import StopPolicy
 from loopkit.state import KernelState, action_signature
 from loopkit.tools import ToolRegistry
@@ -32,6 +43,7 @@ class LoopResult:
     iterations: int
     tokens_in: int
     tokens_out: int
+    heals: int = 0
 
 
 class Kernel:
@@ -44,6 +56,12 @@ class Kernel:
         system_prompt: str = "",
         context_strategy: ContextStrategy | None = None,
         governor: Governor | None = None,
+        critic: Critic | None = None,
+        heal_policy: HealPolicy | None = None,
+        reflexion: ReflexionMemory | None = None,
+        thrash_detector: ThrashDetector | None = None,
+        backoff: Backoff | None = None,
+        sleep: Callable[[float], None] = time.sleep,
     ) -> None:
         self.adapter = adapter
         self.registry = registry
@@ -55,6 +73,18 @@ class Kernel:
         # on when the caller opts in.
         self.context_strategy = context_strategy or PassthroughContext()
         self.governor = governor
+        # Self-heal (M2) is fully inert unless a critic AND a heal policy are
+        # supplied, so M0/M1 runs emit no heal.*/thrash.* events.
+        self.critic = critic
+        self.heal_policy = heal_policy
+        self.reflexion = reflexion or ReflexionMemory()
+        self.thrash_detector = thrash_detector
+        self.backoff = backoff or NoBackoff()
+        self._sleep = sleep
+
+    @property
+    def _healing(self) -> bool:
+        return self.critic is not None and self.heal_policy is not None
 
     def run(self, task: str) -> LoopResult:
         state = KernelState(run_id=self.bus.run_id, task=task)
@@ -67,6 +97,14 @@ class Kernel:
         }
         if self.governor is not None:
             run_start_extra["governor"] = self.governor.snapshot()
+        if self._healing:
+            run_start_extra["heal"] = {
+                "critic": getattr(self.critic, "name", type(self.critic).__name__),
+                "policy": self.heal_policy.name,
+                "backoff": getattr(self.backoff, "name", type(self.backoff).__name__),
+            }
+        if self.thrash_detector is not None:
+            run_start_extra["thrash"] = self.thrash_detector.name
 
         self.bus.emit(
             EventType.RUN_START,
@@ -122,8 +160,19 @@ class Kernel:
                 cost=charged_cost,
             )
 
-            # --- Branch 1: the agent answered. Goal reached, stop success. ---
+            # --- Branch 1: the agent answered. Critic may still veto it. ---
             if result.final is not None:
+                critique = None
+                if self._healing and self.heal_policy.should_heal(state):
+                    critique = self.critic.inspect_final(state, result.final)
+                if critique is not None:
+                    # Record what was proposed so the model sees its own rejected
+                    # answer, then heal and loop instead of stopping success.
+                    state.history.append(
+                        {"role": "assistant", "content": result.final}
+                    )
+                    self._heal(state, critique)
+                    continue
                 state.status = RunStatus.SUCCESS.value
                 state.result = result.final
                 self.bus.emit(
@@ -157,6 +206,34 @@ class Kernel:
                     {"role": "tool", "name": name, "content": observation}
                 )
 
+                # --- Anti-thrash (M2): oscillation guard on the signature stream.
+                # Runs before heal so a loop that keeps healing the *same* failing
+                # action is still stopped rather than retried forever.
+                if self.thrash_detector is not None and self.thrash_detector.check(state):
+                    sig = state.action_signatures[-1]
+                    state.status = RunStatus.THRASHING.value
+                    self.bus.emit(
+                        EventType.THRASH_DETECTED,
+                        signature=sig,
+                        repeats=self.thrash_detector.repeats_of_latest(state),
+                        threshold=self.thrash_detector.threshold,
+                    )
+                    self.bus.emit(
+                        EventType.STOP_CHECK,
+                        policy=self.thrash_detector.name,
+                        decision="stop",
+                        reason=f"action oscillating with no progress: {sig}",
+                        status=state.status,
+                    )
+                    break
+
+                # --- Self-heal (M2): route tool failures through critic + memory.
+                if self._healing and self.heal_policy.should_heal(state):
+                    critique = self.critic.inspect_tool(state, tool_result)
+                    if critique is not None:
+                        self._heal(state, critique)
+                        continue
+
             # --- Governor: the always-on resource rail (opt-in). ---
             if self.governor is not None:
                 gov = self.governor.check()
@@ -187,6 +264,12 @@ class Kernel:
         run_end_extra: dict[str, object] = {}
         if self.governor is not None:
             run_end_extra["governor"] = self.governor.usage()
+        if self._healing:
+            run_end_extra["heal"] = {
+                "heals": self.heal_policy.heals_used,
+                "budget": self.heal_policy.max_heals,
+                "reflexion": self.reflexion.summary(),
+            }
 
         self.bus.emit(
             EventType.RUN_END,
@@ -203,7 +286,35 @@ class Kernel:
             iterations=state.iteration,
             tokens_in=state.tokens_in,
             tokens_out=state.tokens_out,
+            heals=self.heal_policy.heals_used if self._healing else 0,
         )
+
+    def _heal(self, state: KernelState, critique: Critique) -> None:
+        """Record a critique, inject a reflexion note, and back off before retry.
+
+        Emits heal.trigger → heal.critique → heal.retry. The freshest reflexion
+        note is appended to history so the next model turn sees the correction;
+        the full log survives in ReflexionMemory for the run.end summary.
+        """
+        self.bus.emit(
+            EventType.HEAL_TRIGGER,
+            trigger=critique.trigger.value,
+            reason=critique.reason,
+            iteration=state.iteration,
+        )
+        self.bus.emit(
+            EventType.HEAL_CRITIQUE,
+            trigger=critique.trigger.value,
+            suggestion=critique.suggestion,
+        )
+        self.reflexion.add(critique)
+        state.history.append(critique.as_note())
+        self.heal_policy.record()
+        attempt = self.heal_policy.heals_used
+        delay = self.backoff.delay(attempt)
+        self.bus.emit(EventType.HEAL_RETRY, attempt=attempt, delay=delay)
+        if delay > 0:
+            self._sleep(delay)
 
 
 def _truncate(value: object, limit: int = 500) -> object:
