@@ -6,6 +6,11 @@
 
 *The model is a commodity. The loop around it is the engineering.*
 
+![LoopKit — the model is a commodity, the loop around it is the engineering](dashboard/public/og-image.png)
+
+**🔗 Live showcase → https://prashanth261993.github.io/loopkit/** — watch a real
+agent heal itself in the browser, zero backend.
+
 </div>
 
 ---
@@ -89,6 +94,12 @@ Open the URL and hit **★ Play the sample run**. The dashboard is just another
 reader of the same event stream — JSONL replay (no backend), live SSE, or file
 upload. Details in [`GETTING_STARTED.md`](GETTING_STARTED.md) (L3).
 
+The same build also serves the **showcase landing page** at
+[`/showcase.html`](http://localhost:5173/showcase.html) in dev — an
+auto-playing replay, concept explainers, and naive-vs-heal charts. In production
+it's promoted to the site root by the Pages workflow (see the
+[live showcase](https://prashanth261993.github.io/loopkit/)).
+
 ## The agents (proof the abstractions are real)
 
 Three shipped agents live in `packages/loopkit-agents`, each built on the shared
@@ -131,7 +142,7 @@ Built inside-out, milestone by milestone:
 - **M4 — Evals** ✅ naive-vs-self-healing, graded on **task success** not loop status (+80pp, measured)
 - **M4.5 — DX / Onboarding** ✅ the Agent Contract (`Agent` = tools + policies), copy-me `your_first_agent.py`, `GETTING_STARTED.md` ladder, dashboard getting-started panel
 - **M5 — Agents ×3** ✅ shared `loopkit-tools` + `loopkit-agents`; a11y-auditor, dep-updater, pr-fixer — each a thin `tools + policies` composition, each 0%→100% naive-vs-heal
-- **M6 — Showcase** · static GitHub Pages replay dashboard
+- **M6 — Showcase** ✅ multipage Vite build (console + landing), embedded zero-backend replay of a real self-heal run, eval charts, GitHub Actions Pages deploy → **[live site](https://prashanth261993.github.io/loopkit/)**
 
 ## License
 

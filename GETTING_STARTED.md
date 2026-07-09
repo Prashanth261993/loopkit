@@ -140,9 +140,14 @@ token/cost curve grow, tool calls resolve, and a **heal** land mid-run.
 The dashboard is just *another reader of the same event stream* — no special
 instrumentation. It works in three interchangeable modes:
 
-- **JSONL replay** (zero backend — this is what GitHub Pages will host),
+- **JSONL replay** (zero backend — this is what GitHub Pages hosts),
 - **live SSE** (`python -m loopkit.observe ...` and tail `/events`),
 - **file upload**.
+
+The same `npm run dev` also serves the **showcase landing page** at
+`http://localhost:5173/showcase.html` — the public-facing distillation of these
+lessons, embedding this exact replay engine. It's live at
+**https://prashanth261993.github.io/loopkit/**.
 
 **Concept:** if evals and humans read the *same* stream, what you measure and
 what you see can never diverge.
