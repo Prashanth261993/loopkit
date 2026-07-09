@@ -515,6 +515,9 @@
 .loopdraw .ld-dot.ld-heal {
   stroke: var(--heal);
 }
+.loopdraw .ld-arrow polygon {
+  fill: var(--accent-2);
+}
 .loopdraw .ld-label {
   font-family: var(--mono);
   font-size: 12.5px;

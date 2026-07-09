@@ -28,6 +28,15 @@ export function ReplayEmbed() {
   const [speed, setSpeed] = useState(1.5);
   const [err, setErr] = useState<string | null>(null);
   const playerRef = useRef<ReplayPlayer | null>(null);
+  const autoLoopRef = useRef(true); // loops until the visitor takes manual control
+  const loopTimerRef = useRef<number | null>(null);
+
+  function clearLoopTimer() {
+    if (loopTimerRef.current !== null) {
+      window.clearTimeout(loopTimerRef.current);
+      loopTimerRef.current = null;
+    }
+  }
 
   // Load the fixture once.
   useEffect(() => {
@@ -49,41 +58,48 @@ export function ReplayEmbed() {
     };
   }, []);
 
-  // Build the player when the fixture arrives. Auto-play unless the visitor
-  // asked for reduced motion — in which case reveal the whole run at once.
+  // Build the player when the fixture arrives. The player owns timing; React
+  // state only mirrors it. onDone fires once when a run finishes naturally — we
+  // sync the button back to "play" and, if the visitor hasn't taken manual
+  // control, loop the run after a short beat so the section stays alive.
   useEffect(() => {
     if (events.length === 0) return;
     const reduced = prefersReducedMotion();
-    const player = new ReplayPlayer(events, setRevealed, speed);
+    const onDone = () => {
+      setPlaying(false);
+      if (autoLoopRef.current) {
+        clearLoopTimer();
+        loopTimerRef.current = window.setTimeout(() => {
+          const p = playerRef.current;
+          if (!p) return;
+          p.restart();
+          p.play();
+          setPlaying(true);
+        }, 2600);
+      }
+    };
+    const player = new ReplayPlayer(events, setRevealed, speed, onDone, 460);
     playerRef.current = player;
     if (reduced) {
+      autoLoopRef.current = false; // no autonomous replay under reduced-motion
       player.toEnd();
     } else {
       player.play();
       setPlaying(true);
     }
-    return () => player.dispose();
+    return () => {
+      clearLoopTimer();
+      player.dispose();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [events]);
-
-  // Loop the replay: when it finishes while playing, pause briefly then restart
-  // so the section is always "alive" for a visitor who scrolls to it later.
-  useEffect(() => {
-    const player = playerRef.current;
-    if (!player || !playing) return;
-    if (revealed.length >= events.length && events.length > 0) {
-      const t = window.setTimeout(() => {
-        player.restart();
-        player.play();
-      }, 2600);
-      return () => window.clearTimeout(t);
-    }
-  }, [revealed.length, events.length, playing]);
 
   function toggle() {
     const player = playerRef.current;
     if (!player) return;
+    clearLoopTimer();
     if (player.playing) {
+      autoLoopRef.current = false; // visitor paused — stop auto-looping
       player.pause();
       setPlaying(false);
     } else {
@@ -96,6 +112,8 @@ export function ReplayEmbed() {
   function restart() {
     const player = playerRef.current;
     if (!player) return;
+    clearLoopTimer();
+    autoLoopRef.current = true;
     player.restart();
     player.play();
     setPlaying(true);

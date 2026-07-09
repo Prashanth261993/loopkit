@@ -15,6 +15,8 @@ export class ReplayPlayer {
   private timer: number | null = null;
   private _speed: number;
   private onReveal: (revealed: LoopEvent[]) => void;
+  private onDone?: () => void;
+  private minStep: number;
 
   playing = false;
 
@@ -22,10 +24,14 @@ export class ReplayPlayer {
     all: LoopEvent[],
     onReveal: (revealed: LoopEvent[]) => void,
     speed = 1,
+    onDone?: () => void,
+    minStep = MIN_DELAY,
   ) {
     this.all = all;
     this.onReveal = onReveal;
     this._speed = speed;
+    this.onDone = onDone;
+    this.minStep = minStep;
     this.emit();
   }
 
@@ -88,18 +94,23 @@ export class ReplayPlayer {
   }
 
   private scheduleNext(): void {
-    if (!this.playing || this.finished) {
+    if (!this.playing) return;
+    if (this.finished) {
       this.playing = false;
+      this.onDone?.();
       return;
     }
     const prev = this.all[this.cursor - 1];
     const next = this.all[this.cursor];
+    // Per-event pacing floor (scaled by speed) so runs whose events were recorded
+    // milliseconds apart still play back watchably instead of flashing to the end.
+    const floor = this.minStep / this._speed;
     let delay = 0;
     if (prev && next) {
       delay = ((next.ts - prev.ts) * 1000) / this._speed;
-      delay = Math.max(MIN_DELAY, Math.min(MAX_DELAY, delay));
+      delay = Math.max(floor, Math.min(MAX_DELAY, delay));
     } else {
-      delay = MIN_DELAY;
+      delay = floor;
     }
     this.timer = window.setTimeout(() => {
       this.cursor += 1;

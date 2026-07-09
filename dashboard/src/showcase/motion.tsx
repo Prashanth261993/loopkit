@@ -42,15 +42,15 @@ export function Reveal({
   );
 }
 
-/** A slim accent bar pinned to the top that fills with page scroll progress. */
+/** A slim accent bar pinned to the top that fills with page scroll progress.
+ *  Scroll-driven (follows the user's own scroll), so it stays on even under
+ *  prefers-reduced-motion — it isn't autonomous motion. */
 export function ScrollProgress() {
-  const reduced = useReducedMotion();
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, {
     stiffness: 120,
     damping: 30,
     restDelta: 0.001,
   });
-  if (reduced) return null;
   return <motion.div className="scroll-rail" style={{ scaleX }} aria-hidden="true" />;
 }
