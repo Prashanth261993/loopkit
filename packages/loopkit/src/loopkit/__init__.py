@@ -38,6 +38,7 @@ from loopkit.policies import (
     TokenBudget,
     WindowedContext,
 )
+from loopkit.observe import BroadcastHub, SseSink, serve
 from loopkit.state import KernelState
 from loopkit.tools import Tool, ToolRegistry, ToolResult
 
@@ -77,5 +78,9 @@ __all__ = [
     "NoBackoff",
     "ExponentialBackoff",
     "ThrashDetector",
+    # observe (M3)
+    "SseSink",
+    "BroadcastHub",
+    "serve",
     "__version__",
 ]
