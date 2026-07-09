@@ -16,6 +16,18 @@ See ``examples/m0_zero_llm.py`` for a full zero-LLM run.
 
 from loopkit.events import Event, EventBus, EventType, RunStatus, SCHEMA_VERSION
 from loopkit.kernel import Kernel, LoopResult
+from loopkit.policies import (
+    AnyOf,
+    CompactingContext,
+    ContextStrategy,
+    CostModel,
+    Governor,
+    MaxIterations,
+    NoProgress,
+    PassthroughContext,
+    TokenBudget,
+    WindowedContext,
+)
 from loopkit.state import KernelState
 from loopkit.tools import Tool, ToolRegistry, ToolResult
 
@@ -33,5 +45,16 @@ __all__ = [
     "Tool",
     "ToolRegistry",
     "ToolResult",
+    # policies (M1)
+    "AnyOf",
+    "MaxIterations",
+    "TokenBudget",
+    "NoProgress",
+    "ContextStrategy",
+    "PassthroughContext",
+    "WindowedContext",
+    "CompactingContext",
+    "Governor",
+    "CostModel",
     "__version__",
 ]

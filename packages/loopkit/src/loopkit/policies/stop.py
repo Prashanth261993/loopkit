@@ -79,3 +79,27 @@ class AnyOf:
             if decision is not None:
                 return decision
         return None
+
+
+class NoProgress:
+    """Halt when the last ``window`` actions share one signature.
+
+    This is *no-progress detection*: the agent keeps calling the same tool with
+    the same args and learning nothing. Left alone it burns the whole budget
+    oscillating. M1 stops the run (``stalled``); M2 will intervene instead of
+    giving up (anti-thrash) using the very same signature stream.
+    """
+
+    def __init__(self, window: int = 3) -> None:
+        self.window = window
+        self.name = f"no_progress({window})"
+
+    def check(self, state: KernelState) -> StopDecision | None:
+        sigs = state.action_signatures
+        if len(sigs) >= self.window and len(set(sigs[-self.window :])) == 1:
+            return StopDecision(
+                status=RunStatus.STALLED,
+                reason=f"same action repeated {self.window}× with no progress: {sigs[-1]}",
+                policy=self.name,
+            )
+        return None
