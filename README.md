@@ -32,7 +32,7 @@ runtime you can **observe, test, and measure**.
 Layer 4  dashboard/        React/TS — one consumer of the event stream, works for every agent
 Layer 3  loopkit-agents/   pr-fixer · dep-updater · a11y-auditor  (importable, each w/ evals)
 Layer 2  loopkit-tools/    shared tools: subprocess · fs · git · http
-Layer 1  loopkit/          kernel · policies · events · evals · adapters   ← you are here (M0)
+Layer 1  loopkit/          kernel · policies · events · evals · adapters   ← M0–M4.5 ✅ shipped
 ```
 
 The **seam** between the Python kernel and the TypeScript dashboard is a single
@@ -64,13 +64,19 @@ every recorded run is self-describing about what it was permitted to do.
 ```bash
 python -m venv .venv && .venv\Scripts\activate    # Windows
 pip install -e packages/loopkit[dev]
-python examples/m0_zero_llm.py
+python examples/m0_zero_llm.py                    # see the loop, no LLM/network
+python examples/your_first_agent.py               # your own agent: it heals & grades itself
 pytest
 ```
 
 `examples/m0_zero_llm.py` runs the full loop with **no LLM and no network** using
 the `MockAdapter`, then verifies the emitted event stream is well-formed and the
-safety gate held.
+safety gate held. `examples/your_first_agent.py` is the **~40-line file you
+copy** to build your own agent — it heals once and scores naive 0% vs self-heal
+100% on the same task.
+
+**→ Full guided walkthrough: [`GETTING_STARTED.md`](GETTING_STARTED.md)** — an
+L0→L4 ladder from *see the loop* to *grade it*, one keyless command per rung.
 
 ## Status
 
@@ -81,6 +87,7 @@ Built inside-out, milestone by milestone:
 - **M2 — Self-heal** ✅ actor–critic, retry/backoff, Reflexion memory, anti-thrash
 - **M3 — Observe** ✅ SSE server + React dashboard (live + JSONL replay), drillable event rows
 - **M4 — Evals** ✅ naive-vs-self-healing, graded on **task success** not loop status (+80pp, measured)
+- **M4.5 — DX / Onboarding** ✅ the Agent Contract (`Agent` = tools + policies), copy-me `your_first_agent.py`, `GETTING_STARTED.md` ladder, dashboard getting-started panel
 - **M5 — Agents ×3** · a11y-auditor → dep-updater → pr-fixer
 - **M6 — Showcase** · static GitHub Pages replay dashboard
 

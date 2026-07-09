@@ -264,6 +264,47 @@ body {
   font-size: 12.5px;
   margin-top: 20px;
 }
+.welcome-steps {
+  margin-top: 34px;
+  text-align: left;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, var(--bg-1), rgba(15, 21, 32, 0.4));
+  padding: 20px 24px;
+}
+.welcome-steps-title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--fg);
+  margin-bottom: 14px;
+}
+.welcome-steps ol {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.welcome-steps li {
+  color: var(--fg-dim);
+  line-height: 1.5;
+  font-size: 13px;
+}
+.welcome-steps li code {
+  display: block;
+  margin-top: 6px;
+  padding: 6px 10px;
+  font-size: 12.5px;
+}
+.welcome-steps .step-label {
+  color: var(--fg);
+  font-weight: 600;
+}
+.welcome-steps .welcome-hint {
+  margin-top: 16px;
+  margin-bottom: 0;
+}
 
 /* ---------- run header ---------- */
 .run-header {

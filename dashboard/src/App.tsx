@@ -190,10 +190,28 @@ function Welcome({ onLoadSample }: { onLoadSample: () => void }) {
       <button className="btn btn-primary" onClick={onLoadSample}>
         ★ Play the sample run
       </button>
-      <p className="welcome-hint">
-        …or upload your own <code>artifacts/*.jsonl</code>, or connect to a running{" "}
-        <code>loopkit.observe</code> server.
-      </p>
+
+      <div className="welcome-steps">
+        <div className="welcome-steps-title">New here? Get running in 3 steps</div>
+        <ol>
+          <li>
+            <span className="step-label">See the loop</span> — a full run, zero LLM
+            <code>python examples/m0_zero_llm.py</code>
+          </li>
+          <li>
+            <span className="step-label">Build your own</span> — 1 tool + 1 policy, it heals &amp; grades
+            <code>python examples/your_first_agent.py</code>
+          </li>
+          <li>
+            <span className="step-label">Observe it here</span> — generate a run, then load it
+            <code>python examples/m3_observe.py</code>
+          </li>
+        </ol>
+        <p className="welcome-hint">
+          Full walkthrough in <code>GETTING_STARTED.md</code>. You can also upload your own{" "}
+          <code>artifacts/*.jsonl</code> or tail a live <code>loopkit.observe</code> server.
+        </p>
+      </div>
     </div>
   );
 }
