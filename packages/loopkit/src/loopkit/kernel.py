@@ -128,13 +128,18 @@ class Kernel:
                 **ctx.describe(),
             )
 
+            specs = self.registry.specs()
             self.bus.emit(
                 EventType.MODEL_REQUEST,
                 adapter=self.adapter.name,
                 messages=len(ctx.messages),
-                tools=len(self.registry.specs()),
+                tools=len(specs),
+                # Enriched so the dashboard can drill into *what* was sent, not
+                # just how many. Content is truncated to keep the event small.
+                message_previews=[_preview_message(m) for m in ctx.messages],
+                tool_names=[s["name"] for s in specs],
             )
-            result = self.adapter.complete(ctx.messages, self.registry.specs())
+            result = self.adapter.complete(ctx.messages, specs)
             state.tokens_in += result.tokens_in
             state.tokens_out += result.tokens_out
 
@@ -320,3 +325,21 @@ class Kernel:
 def _truncate(value: object, limit: int = 500) -> object:
     text = value if isinstance(value, str) else repr(value)
     return text if len(text) <= limit else text[:limit] + "…"
+
+
+def _preview_message(message: dict[str, object], limit: int = 120) -> dict[str, object]:
+    """Compact, drill-down-friendly view of a context message.
+
+    Keeps role + an optional tool ``name`` and a truncated content preview so
+    the dashboard can show *what* the model saw without shipping full history.
+    """
+    content = str(message.get("content", ""))
+    preview: dict[str, object] = {
+        "role": message.get("role", "?"),
+        "preview": content if len(content) <= limit else content[: limit - 1] + "…",
+        "chars": len(content),
+    }
+    name = message.get("name")
+    if name:
+        preview["name"] = name
+    return preview

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { LoopEvent, IterationView, RunModel } from "../types";
 
 const ICON: Record<string, string> = {
@@ -61,16 +62,164 @@ function truncate(s: string, n = 64): string {
   return s.length > n ? s.slice(0, n - 1) + "…" : s;
 }
 
+type Msg = { role?: string; name?: string; preview?: string; chars?: number };
+
+function hasDetail(ev: LoopEvent): boolean {
+  const d = ev.data ?? {};
+  switch (ev.type) {
+    case "model.request":
+      return Array.isArray(d.message_previews) || Array.isArray(d.tool_names);
+    case "model.response":
+      return d.thought != null || d.tool_call != null || d.final != null;
+    case "tool.call":
+      return d.args != null;
+    case "tool.result":
+      return d.output != null || d.error != null;
+    case "iteration.start":
+      return d.context_strategy != null;
+    case "heal.critique":
+    case "heal.trigger":
+    case "stop.check":
+      return true;
+    default:
+      return d != null && Object.keys(d).length > 0;
+  }
+}
+
+function pretty(value: unknown): string {
+  try {
+    return JSON.stringify(value, null, 2);
+  } catch {
+    return String(value);
+  }
+}
+
+function Details({ ev }: { ev: LoopEvent }) {
+  const d = ev.data ?? {};
+  switch (ev.type) {
+    case "model.request": {
+      const msgs = (d.message_previews as Msg[] | undefined) ?? [];
+      const tools = (d.tool_names as string[] | undefined) ?? [];
+      return (
+        <div className="ev-details">
+          {msgs.length > 0 && (
+            <>
+              <div className="ev-details-label">messages sent ({msgs.length})</div>
+              <ul className="ev-msgs">
+                {msgs.map((m, i) => (
+                  <li key={i} className="ev-msg">
+                    <span className={`ev-msg-role role-${m.role ?? "?"}`}>
+                      {m.role}
+                      {m.name ? `/${m.name}` : ""}
+                    </span>
+                    <span className="ev-msg-preview">{m.preview}</span>
+                    {m.chars != null && <span className="ev-msg-chars">{m.chars} ch</span>}
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+          {tools.length > 0 && (
+            <>
+              <div className="ev-details-label">tools available ({tools.length})</div>
+              <div className="ev-tools">
+                {tools.map((t) => (
+                  <span key={t} className="ev-tool-chip">
+                    {t}
+                  </span>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      );
+    }
+    case "model.response": {
+      const call = d.tool_call as { name?: string; args?: unknown } | null;
+      return (
+        <div className="ev-details">
+          {d.thought != null && (
+            <>
+              <div className="ev-details-label">thought</div>
+              <pre className="ev-pre">{String(d.thought)}</pre>
+            </>
+          )}
+          {call?.name && (
+            <>
+              <div className="ev-details-label">tool call → {call.name}</div>
+              <pre className="ev-pre">{pretty(call.args)}</pre>
+            </>
+          )}
+          {d.final != null && (
+            <>
+              <div className="ev-details-label">final answer</div>
+              <pre className="ev-pre">{String(d.final)}</pre>
+            </>
+          )}
+        </div>
+      );
+    }
+    case "tool.call":
+      return (
+        <div className="ev-details">
+          <div className="ev-details-label">args</div>
+          <pre className="ev-pre">{pretty(d.args)}</pre>
+        </div>
+      );
+    case "tool.result":
+      return (
+        <div className="ev-details">
+          <div className="ev-details-label">{d.ok === false ? "error" : "output"}</div>
+          <pre className="ev-pre">{String(d.error ?? d.output ?? "")}</pre>
+        </div>
+      );
+    case "iteration.start":
+      return (
+        <div className="ev-details">
+          <div className="ev-details-label">context</div>
+          <pre className="ev-pre">{pretty(d)}</pre>
+        </div>
+      );
+    default:
+      return (
+        <div className="ev-details">
+          <pre className="ev-pre">{pretty(d)}</pre>
+        </div>
+      );
+  }
+}
+
 function EventRow({ ev }: { ev: LoopEvent }) {
+  const [open, setOpen] = useState(false);
   const kind = ev.type.replace(".", "-");
+  const expandable = hasDetail(ev);
   return (
-    <li className={`ev ev-${kind}`}>
-      <span className="ev-icon" aria-hidden>
-        {ICON[ev.type] ?? "•"}
-      </span>
-      <span className="ev-type">{ev.type}</span>
-      <span className="ev-summary">{summarize(ev)}</span>
-      <span className="ev-seq">#{ev.seq}</span>
+    <li className={`ev-item ${open ? "is-open" : ""}`}>
+      <div
+        className={`ev ev-${kind} ${expandable ? "is-expandable" : ""}`}
+        onClick={expandable ? () => setOpen((o) => !o) : undefined}
+        role={expandable ? "button" : undefined}
+        tabIndex={expandable ? 0 : undefined}
+        onKeyDown={
+          expandable
+            ? (e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setOpen((o) => !o);
+                }
+              }
+            : undefined
+        }
+        aria-expanded={expandable ? open : undefined}
+      >
+        <span className="ev-icon" aria-hidden>
+          {expandable ? (open ? "▾" : "▸") : ICON[ev.type] ?? "•"}
+        </span>
+        <span className="ev-type">{ev.type}</span>
+        <span className="ev-summary">{summarize(ev)}</span>
+        <span className="ev-seq">#{ev.seq}</span>
+      </div>
+      {open && expandable && <Details ev={ev} />}
     </li>
   );
 }

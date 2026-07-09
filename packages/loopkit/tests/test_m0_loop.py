@@ -92,3 +92,19 @@ def test_run_start_records_safety_config():
     start = mem.of_type("run.start")[0]
     assert start.data["safety"]["mode"] == "dry_run_by_default"
     assert "write_file" in start.data["safety"]["destructive_tools"]
+
+
+def test_model_request_is_drillable():
+    """E1: model.request carries per-message previews + tool names, not just counts."""
+    _, mem = _run([act("reverse", {"text": "abc"}), final("cba")])
+    req = mem.of_type("model.request")[0]
+    # backward-compatible counts still present
+    assert isinstance(req.data["messages"], int)
+    assert isinstance(req.data["tools"], int)
+    # enriched drill-down payload
+    previews = req.data["message_previews"]
+    assert len(previews) == req.data["messages"]
+    assert {"role", "preview", "chars"} <= set(previews[0])
+    names = req.data["tool_names"]
+    assert names == ["reverse", "write_file"]
+    assert len(names) == req.data["tools"]

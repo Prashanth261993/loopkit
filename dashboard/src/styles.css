@@ -543,6 +543,103 @@ body {
   filter: drop-shadow(0 0 5px rgba(87, 199, 255, 0.5));
 }
 
+.ev-item {
+  border-left: 2px solid transparent;
+}
+.ev-item.is-open {
+  background: rgba(255, 255, 255, 0.015);
+  border-left-color: rgba(87, 199, 255, 0.35);
+}
+.ev.is-expandable {
+  cursor: pointer;
+}
+.ev.is-expandable:focus-visible {
+  outline: 1px solid var(--accent-2);
+  outline-offset: -1px;
+}
+.ev-details {
+  padding: 6px 14px 12px 44px;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+.ev-details-label {
+  color: var(--fg-faint);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 8px 0 4px;
+}
+.ev-details-label:first-child {
+  margin-top: 0;
+}
+.ev-pre {
+  margin: 0;
+  padding: 8px 10px;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 5px;
+  color: var(--fg);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 260px;
+  overflow: auto;
+}
+.ev-msgs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.ev-msg {
+  display: grid;
+  grid-template-columns: 92px 1fr auto;
+  gap: 8px;
+  align-items: baseline;
+  padding: 3px 8px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+.ev-msg-role {
+  font-size: 10.5px;
+  color: var(--fg-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.ev-msg-role.role-system {
+  color: var(--fg-faint);
+}
+.ev-msg-role.role-tool {
+  color: var(--accent-2);
+}
+.ev-msg-role.role-assistant {
+  color: var(--accent);
+}
+.ev-msg-preview {
+  color: var(--fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ev-msg-chars {
+  color: var(--fg-faint);
+  font-size: 10px;
+}
+.ev-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.ev-tool-chip {
+  padding: 2px 8px;
+  background: rgba(87, 199, 255, 0.1);
+  border: 1px solid rgba(87, 199, 255, 0.25);
+  border-radius: 10px;
+  font-size: 11px;
+  color: var(--accent-2);
+}
+
 @media (max-width: 860px) {
   .stat-grid {
     grid-template-columns: repeat(4, 1fr);
