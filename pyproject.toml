@@ -1,0 +1,12 @@
+# Root dev-tooling config for the LoopKit monorepo.
+# The installable package lives in packages/loopkit (install with:
+#   pip install -e packages/loopkit
+# ). This root file only carries shared lint/test configuration.
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["dashboard", "lessons"]
+
+[tool.pytest.ini_options]
+testpaths = ["packages/loopkit/tests"]

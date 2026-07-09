@@ -1,0 +1,31 @@
+# --- Private learning journal (per user request) ---
+lessons/
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# --- Run artifacts (generated event streams) ---
+artifacts/*.jsonl
+!artifacts/.gitkeep
+
+# --- Node / dashboard (added in M3) ---
+node_modules/
+dashboard/dist/
+*.local
+
+# --- Editor / OS ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
